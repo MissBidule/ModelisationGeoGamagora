@@ -7,6 +7,16 @@ public class CubeNode
     private float size = 1;
     public int depth = 1;
 
+    public void setSize(float _size)
+    {
+        size = _size;
+    }
+
+    public void setPosition(Vector3 _position)
+    {
+        position = _position;
+    }
+
     public List<CubeNode> MakeChildNodes()
     {
         List<CubeNode> childNodes = new List<CubeNode>();
@@ -46,17 +56,25 @@ public class CubeNode
         return vertexPosition;
     }
 
-    public void drawNode()
+    public void drawNode(bool visibility)
     {
         var cube = GameObject.CreatePrimitive(PrimitiveType.Cube); 
         cube.name = "cubeDepth" + depth;
         cube.GetComponent<Renderer>().material.color = Color.white / depth; 
+        cube.GetComponent<Renderer>().enabled = visibility;
         cube.transform.position = position;
         cube.transform.localScale = new Vector3(size, size, size);
+        cube.AddComponent<changeVisibility>();
+        cube.GetComponent<changeVisibility>().initVisibility = visibility;
     }
 
     public Vector3 center()
     {
         return position;
+    }
+
+    public float getSize()
+    {
+        return size;
     }
 }
