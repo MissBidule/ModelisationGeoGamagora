@@ -20,8 +20,8 @@ public class changeVisibility : MonoBehaviour
         GetComponent<Renderer>().enabled = !initVisibility;
     }
 
-    void OnTriggerExit(Collider other)
+    /*void OnTriggerExit(Collider other)
     {
         GetComponent<Renderer>().enabled = initVisibility;
-    }
+    }*/
 }
