@@ -24,3 +24,12 @@ The object spatial enum has different options :
     - Visibility determines if the cubes inside the bounding box are visible or not by default
 
 You can move the Brush gameObject to show or erase what is in contact with it. If the cubes are not visible all cubes in contact will be. And vice versa.
+
+# TP4
+
+The vertex clustering simply take a 3D object in a scene and by selecting the size of the minimum box size per point, it will simplify the shape.
+
+# TP3
+
+The loop object takes a .off named file inside the shapes folder and will iterate depending on the iterations option to create new points and complexify the shape. The best example is the one with the cube shape.
+Also you will see with the orthographic Y view, a shape rounded by Chaikin algorithm. You can change its point in its gameobject options.

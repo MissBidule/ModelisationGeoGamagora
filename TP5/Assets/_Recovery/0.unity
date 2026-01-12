@@ -470,7 +470,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1677eac8f7451394c8ab7d822ea44338, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::offReader
-  iteration: 1
+  iteration: 10
   offFileName: cube
 --- !u!4 &686677769
 Transform:

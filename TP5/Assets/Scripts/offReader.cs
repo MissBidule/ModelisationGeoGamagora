@@ -147,40 +147,53 @@ public class offReader : MonoBehaviour
         List<int> currentTriangles = newShape.triangles;
         
         List<int> loopTriangles = new List<int>();
-        List<Vector3> loopVertices = new List<Vector3>(currentVertices);
+        List<Vector3> loopVertices = new List<Vector3>();
 
         for (int j = 0; j < iteration; j++) {
             loopTriangles.Clear();
-            loopVertices.Clear();
-            for (int i = 0; i < currentVertices.Count / 3; i++)
+            loopVertices = new List<Vector3>(currentVertices);
+            for (int i = 0; i < currentTriangles.Count / 3; i++)
             {
-                loopVertices.Add(loopVertex(newShape.vertices[currentTriangles[i*3+0]], currentVertices[currentTriangles[i*3+1]]));
-                loopVertices.Add(loopVertex(newShape.vertices[currentTriangles[i*3+1]], currentVertices[currentTriangles[i*3+2]]));
-                loopVertices.Add(loopVertex(newShape.vertices[currentTriangles[i*3+2]], currentVertices[currentTriangles[i*3+0]]));
+                loopVertices.Add(splitVertex(currentVertices[currentTriangles[i*3+0]], currentVertices[currentTriangles[i*3+1]]));
+                loopVertices.Add(splitVertex(currentVertices[currentTriangles[i*3+1]], currentVertices[currentTriangles[i*3+2]]));
+                loopVertices.Add(splitVertex(currentVertices[currentTriangles[i*3+2]], currentVertices[currentTriangles[i*3+0]]));
             
-                loopTriangles.Add(loopTriangles[i*3+0]);
-                loopTriangles.Add(loopTriangles[loopTriangles.Count-2]);
-                loopTriangles.Add(loopTriangles[loopTriangles.Count-0]);
+                loopTriangles.Add(currentTriangles[i*3+0]);
+                loopTriangles.Add(loopVertices.Count-3);
+                loopTriangles.Add(loopVertices.Count-1);
                 
-                loopTriangles.Add(loopTriangles[i*3+1]);
-                loopTriangles.Add(loopTriangles[loopTriangles.Count-1]);
-                loopTriangles.Add(loopTriangles[loopTriangles.Count-2]);
+                loopTriangles.Add(currentTriangles[i*3+1]);
+                loopTriangles.Add(loopVertices.Count-2);
+                loopTriangles.Add(loopVertices.Count-3);
 
-                loopTriangles.Add(loopTriangles[i*3+2]);
-                loopTriangles.Add(loopTriangles[loopTriangles.Count-0]);
-                loopTriangles.Add(loopTriangles[loopTriangles.Count-1]);
+                loopTriangles.Add(currentTriangles[i*3+2]);
+                loopTriangles.Add(loopVertices.Count-1);
+                loopTriangles.Add(loopVertices.Count-2);
                 
-                loopTriangles.Add(loopTriangles[loopTriangles.Count-2]);
-                loopTriangles.Add(loopTriangles[loopTriangles.Count-1]);
-                loopTriangles.Add(loopTriangles[loopTriangles.Count-0]);
+                loopTriangles.Add(loopVertices.Count-3);
+                loopTriangles.Add(loopVertices.Count-2);
+                loopTriangles.Add(loopVertices.Count-1);
             }
 
+            currentTriangles = new List<int>(loopTriangles);
             currentVertices = new List<Vector3>(loopVertices);
+            
+            loopVertex(currentTriangles, currentVertices, loopVertices);
+
+            currentVertices.Clear();
+            currentVertices = new List<Vector3>(loopVertices);
+            currentTriangles.Clear();
             currentTriangles = new List<int>(loopTriangles);
         }
 
         List<Vector3> loopNormals = new List<Vector3>(loopVertices.Count);
         List<int> normalsNb = new List<int>(loopVertices.Count);
+
+        for (int i = 0; i < loopVertices.Count; i++)
+        {
+            loopNormals.Add(new Vector3());
+            normalsNb.Add(0);
+        }
 
         for (int i = 0; i < loopTriangles.Count/3; i++) {
             int pointA = loopTriangles[i*3+0];
@@ -214,8 +227,54 @@ public class offReader : MonoBehaviour
         newShape.triangles = new List<int>(loopTriangles);
     }
 
-    Vector3 loopVertex(Vector3 v1, Vector3 v2)
+    Vector3 splitVertex(Vector3 v1, Vector3 v2)
     {
-        
+        return (v1 + v2)/2.0f;
+    }
+
+    void loopVertex(List<int> currentTriangles, List<Vector3> currentVertices, List<Vector3> loopVertices)
+    {
+        //fuse our vertex first
+        List<int> replac = new List<int>();
+        for (int i = 0; i < currentVertices.Count; i++) replac.Add(i);
+
+        for (int i = 0; i < currentVertices.Count - 1; i ++)
+        {
+            for (int j = i + 1; j < currentVertices.Count; j++)
+            {
+                if (currentVertices[i] == currentVertices[j] && replac[j] == j)
+                {
+                    replac[j] = i;
+                }
+            }
+        }
+
+        List<HashSet<int>> weight = new List<HashSet<int>>();
+        for (int i = 0; i < currentVertices.Count; i++) weight.Add(new HashSet<int>());
+        for (int i = 0; i < currentTriangles.Count/3; i++)
+        {
+            //A
+            weight[replac[currentTriangles[i * 3]]].Add(replac[currentTriangles[i * 3 + 1]]);
+            weight[replac[currentTriangles[i * 3]]].Add(replac[currentTriangles[i * 3 + 2]]);
+
+            //B
+            weight[replac[currentTriangles[i * 3 + 1]]].Add(replac[currentTriangles[i * 3 + 0]]);
+            weight[replac[currentTriangles[i * 3 + 1]]].Add(replac[currentTriangles[i * 3 + 2]]);
+
+            //C
+            weight[replac[currentTriangles[i * 3 + 2]]].Add(replac[currentTriangles[i * 3 + 1]]);
+            weight[replac[currentTriangles[i * 3 + 2]]].Add(replac[currentTriangles[i * 3 + 0]]);
+        }
+        //new pos
+        for (int i = 0; i < currentVertices.Count; i++)
+        {
+            float a = Mathf.Pow(3 + 2 * Mathf.Cos(2 * Mathf.PI/weight[replac[i]].Count), 2)/32.0f - (1.0f/4.0f);
+            float b = (1 - a) / weight[replac[i]].Count;
+            loopVertices[i] = a * currentVertices[i];
+            foreach (int point in weight[replac[i]])
+            {
+                loopVertices[i] += b * currentVertices[point];
+            }
+        }
     }
 }
